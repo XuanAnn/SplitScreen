@@ -35,12 +35,12 @@ jobs:
           SCHEME=$(xcodebuild -workspace "$WORKSPACE" -list | awk '/Schemes:/{flag=1;next}/^$/{flag=0}flag' | tr -d ' ' | head -n 1)
           echo "Found workspace: $WORKSPACE"
           echo "Found scheme: $SCHEME"
-          xcodebuild clean archive \
+          xcodebuild clean build \
             -workspace "$WORKSPACE" \
             -scheme "$SCHEME" \
             -configuration Release \
             -destination 'generic/platform=iOS' \
-            -archivePath ../build/splitscreen.xcarchive \
+            -derivedDataPath ../build \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY="" \
@@ -48,8 +48,10 @@ jobs:
 
       - name: Package to .ipa
         run: |
+          APP_PATH=$(find build -name "*.app" -type d | head -n 1)
+          echo "Found compiled app at: $APP_PATH"
           mkdir -p Payload
-          cp -r build/splitscreen.xcarchive/Products/Applications/*.app Payload/
+          cp -r "$APP_PATH" Payload/
           zip -r splitscreen.ipa Payload
 
       - name: Upload IPA Artifact
